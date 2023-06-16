@@ -13,7 +13,9 @@ cp ./src/config.json.example ./src/config.json
 edit the config.json file to match your settings 
 
 ```bash
-npm i 
-cd goobot
-cp ./src/config.json.example ./src/config.json
+npm i --omit=dev
+npm i typescript
+npm run build
+npm run sync
+npm run start
 ```
