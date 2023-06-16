@@ -1,10 +1,10 @@
 import {
   type CommandInteraction,
   SlashCommandBuilder,
-  type GuildMember,
   ActivityType
 } from 'discord.js'
-import { checkMemberPermissions, execute, insertGoob } from '../db'
+import { execute, insertGoob } from '../db'
+import { owner_id } from '../config.json'
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,10 +27,18 @@ module.exports = {
       return
     }
 
-    if (!(await checkMemberPermissions(member as GuildMember)).delete) {
-      await interaction.reply({ content: "I am sorry dave, I cannot do that\nYou don't have the permission to manage roles on this server. You muse have the **delete** permission", ephemeral: true })
+    if (interaction.user.id !== owner_id) {
+      await interaction.reply({
+        content: 'You do not have access to this command!',
+        ephemeral: true
+      })
       return
     }
+
+    // if (!(await checkMemberPermissions(member as GuildMember)).delete) {
+    //   await interaction.reply({ content: "I am sorry dave, I cannot do that\nYou don't have the permission to manage roles on this server. You muse have the **delete** permission", ephemeral: true })
+    //   return
+    // }
     const messageId = interaction.options.get('messageid')?.value
     if (messageId === undefined) {
       void interaction.reply({ content: 'Something went wrong : messageid null', ephemeral: true })
