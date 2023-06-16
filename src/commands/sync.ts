@@ -10,7 +10,7 @@ module.exports = {
   global: false,
   data: new SlashCommandBuilder()
     .setName('sync')
-    .setDescription('Synchronise all past and future goobers from this channel'),
+    .setDescription('Save all future goobers from this channel'),
   async execute (interaction: CommandInteraction) {
     if (interaction.user.id !== owner_id) {
       await interaction.reply({
@@ -30,7 +30,7 @@ module.exports = {
       return
     }
 
-    await interaction.client.commands.get('load')?.execute(interaction)
+    // await interaction.client.commands.get('load')?.execute(interaction)
 
     const reply = await interaction.fetchReply()
     if (reply === undefined) {
@@ -53,5 +53,7 @@ module.exports = {
     interaction.client.user?.setActivity(`${length[0].count as string} goobers`, {
       type: ActivityType.Listening
     })
+
+    await interaction.reply({ content: 'this channel has been set as the goober channel', ephemeral: true })
   }
 }
