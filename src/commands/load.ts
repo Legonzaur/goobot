@@ -53,11 +53,12 @@ module.exports = {
 
     while (messages !== undefined && messages.size > 0) {
       const permissionFilter = await Promise.all((messages as unknown as Message[]).map(async e => {
-        if (e.member === null) throw new Error('member is null')
-        return (await checkMemberPermissions(e.member)).create && e.reactions.resolve('🚫') === null
+        const member = await e.guild?.members.fetch(e.author.id)
+        if (member === undefined) { console.error('member is undefined'); return }
+        return (await checkMemberPermissions(member)).create && e.reactions.resolve('🚫') === null
       }))
 
-      const filteredMessages = (messages as unknown as Message[]).map(e => e).filter((e, i) => permissionFilter[i] && !e.author.bot)
+      const filteredMessages = (messages as unknown as Message[]).map(e => e).filter((e, i) => (permissionFilter[i] ?? false) && !e.author.bot)
 
       // parses the messages
       // shenanigans to save goobs into the database
