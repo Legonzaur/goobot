@@ -113,7 +113,7 @@ export async function loadPreviousGoob (client: Client): Promise<void> {
       const permissionFilter = await Promise.all((messages as unknown as Message[]).map(async e => {
         let member = e.member
         if (member === null) {
-          const member2 = await e.guild?.members.fetch(e.author.id)
+          const member2 = await (e.guild?.members.fetch(e.author.id))?.catch(e => {})
           if (member2 === undefined) return
           member = member2
         }

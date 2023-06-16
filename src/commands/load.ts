@@ -53,7 +53,7 @@ module.exports = {
 
     while (messages !== undefined && messages.size > 0) {
       const permissionFilter = await Promise.all((messages as unknown as Message[]).map(async e => {
-        const member = await e.guild?.members.fetch(e.author.id)
+        const member = await (e.guild?.members.fetch(e.author.id))?.catch(e => {})
         if (member === undefined) { console.error('member is undefined'); return }
         return (await checkMemberPermissions(member)).create && e.reactions.resolve('🚫') === null
       }))
