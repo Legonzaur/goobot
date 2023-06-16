@@ -1,9 +1,10 @@
 import {
   type CommandInteraction,
   SlashCommandBuilder,
-  type GuildMember
+  type GuildMember,
+  ActivityType
 } from 'discord.js'
-import { checkMemberPermissions, insertGoob } from '../db'
+import { checkMemberPermissions, execute, insertGoob } from '../db'
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -41,5 +42,9 @@ module.exports = {
     }
     insertGoob(message)
     await interaction.reply({ content: 'Goober inserted', ephemeral: true })
+    const length = await execute('SELECT count(*) as count from goob')
+    interaction.client.user?.setActivity(`${length[0].count as string} goobers`, {
+      type: ActivityType.Listening
+    })
   }
 }

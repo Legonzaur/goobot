@@ -1,10 +1,11 @@
 import {
   type CommandInteraction,
   SlashCommandBuilder,
-  type Message
+  type Message,
+  ActivityType
 } from 'discord.js'
 import { owner_id } from '../config.json'
-import db, { checkMemberPermissions, insertGoob } from '../db'
+import db, { checkMemberPermissions, execute, insertGoob } from '../db'
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -58,7 +59,6 @@ module.exports = {
 
       const filteredMessages = (messages as unknown as Message[]).map(e => e).filter((e, i) => permissionFilter[i] && !e.author.bot)
 
-      console.log(filteredMessages)
       // parses the messages
       // shenanigans to save goobs into the database
       loadedImages += filteredMessages.map(insertGoob).reduce<number>((acc, v) => v + acc, 0)
@@ -98,5 +98,9 @@ module.exports = {
         $last_message: reply.id
       }
     )
+    const length = await execute('SELECT count(*) as count from goob')
+    interaction.client.user?.setActivity(`${length[0].count as string} goobers`, {
+      type: ActivityType.Listening
+    })
   }
 }

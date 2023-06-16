@@ -1,4 +1,4 @@
-import { type Message, type Client, type GuildMember } from 'discord.js'
+import { type Message, type Client, type GuildMember, ActivityType } from 'discord.js'
 import { verbose } from 'sqlite3'
 const sqlite = verbose()
 const db = new sqlite.Database('goobers.db')
@@ -56,21 +56,26 @@ export function insertGoob (message: Message): number {
 
   const embeds = message.embeds.filter((e) => e.image !== undefined || e.video !== undefined)
 
-  attachments.forEach(a => db.run('INSERT INTO goob (messageid, guild, channel, url) VALUES ($messageid, $guild, $channel, $url)', {
-    $messageid: message.id,
-    $guild: message.guildId,
-    $channel: message.channelId,
-    $url: a.url
-  }))
+  let promises = attachments.map(async a =>
+    await execute('INSERT INTO goob (messageid, guild, channel, url) VALUES ($messageid, $guild, $channel, $url)', {
+      $messageid: message.id,
+      $guild: message.guildId,
+      $channel: message.channelId,
+      $url: a.url
+    })
+  )
 
-  embeds.forEach(e => db.run('INSERT INTO goob (messageid, guild, channel, url) VALUES ($messageid, $guild, $channel, $url)', {
-    $messageid: message.id,
-    $guild: message.guildId,
-    $channel: message.channelId,
-    $url: e.video !== undefined ? e.video?.url : e.image?.url
-  }))
+  promises = [...promises, ...embeds.map(async e =>
+    await execute('INSERT INTO goob (messageid, guild, channel, url) VALUES ($messageid, $guild, $channel, $url)', {
+      $messageid: message.id,
+      $guild: message.guildId,
+      $channel: message.channelId,
+      $url: e.video !== undefined ? e.video?.url : e.image?.url
+    })
+  )]
 
   if (attachments.size > 0 || embeds.length > 0) void message.react('📥')
+  void Promise.all(promises).catch(async () => await message.react('⁉️'))
   return attachments.size + embeds.length
 }
 
@@ -87,4 +92,57 @@ export async function deleteGoob (targetimage: { guild: string, channel: string,
   if (message === undefined) return
   await message.react('🚫')
 }
+
+export async function loadPreviousGoob (client: Client): Promise<void> {
+  const channels = await execute('SELECT * from tracked') as Array<{ guild: string, channel: string, last_message: string }>
+
+  await Promise.all(channels.map(async c => {
+    const guild = await client.guilds.fetch(c.guild)
+    const channel = await guild.channels.fetch(c.channel)
+    if (channel === null) return
+    if (!channel.isTextBased()) return
+
+    let messages = await channel?.messages
+      .fetch({ after: c.last_message })
+      .catch(console.error)
+    let loaded = 0
+    let loadedImages = 0
+    let lastmessage
+    while (messages !== undefined && messages.size > 0) {
+      loaded += messages.size
+      const permissionFilter = await Promise.all((messages as unknown as Message[]).map(async e => {
+        let member = e.member
+        if (member === null) {
+          const member2 = await e.guild?.members.fetch(e.author.id)
+          if (member2 === undefined) return
+          member = member2
+        }
+        return (await checkMemberPermissions(member)).create && e.reactions.resolve('🚫') === null
+      }))
+
+      const filteredMessages = (messages as unknown as Message[]).map(e => e).filter((e, i) => (permissionFilter[i] ?? false) && !e.author.bot)
+
+      // parses the messages
+      // shenanigans to save goobs into the database
+      loadedImages += filteredMessages.map(insertGoob).reduce<number>((acc, v) => v + acc, 0)
+
+      lastmessage = messages.first() as Message | undefined
+      if (lastmessage === undefined) {
+        console.error("Coudn't fetch message data")
+        break
+      }
+      client.user?.setActivity(`${loaded} messages with ${loadedImages} images`, {
+        type: ActivityType.Watching
+      })
+
+      messages = await channel?.messages
+        .fetch({ after: lastmessage.id })
+        .catch(console.error)
+    }
+    if (lastmessage === undefined) return
+    await execute('UPDATE tracked SET last_message=$last_message WHERE guild=$guild AND channel=$channel',
+      { $channel: channel.id, $guild: channel.guildId, $last_message: lastmessage.id })
+  }))
+}
+
 export default db
