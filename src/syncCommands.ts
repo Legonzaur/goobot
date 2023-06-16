@@ -9,13 +9,12 @@ const commands = [] as SlashCommand[]
 const commandsPath = path.join(__dirname, 'commands')
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
 
-console.log(commandFiles)
 const promises = [] as Array<Promise<void>>
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file)
   promises.push(import(filePath).then(({ default: command }) => {
     if ('data' in command && 'execute' in command) {
-      commands.push(command)
+      commands.push(command.data.toJSON())
     } else {
       console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`)
     }
@@ -36,6 +35,7 @@ void Promise.all(promises).then(async () => {
     const data = await rest.put(
       Routes.applicationGuildCommands(discord_app_id, discord_guild_id),
       { body: commands }
+
     )
 
     console.log(`Successfully reloaded ${(data as string[]).length} application (/) commands.`)
