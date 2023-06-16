@@ -29,11 +29,11 @@ module.exports = {
 
     const role = interaction.options.get('role')?.value
     if (role === undefined) {
-      await interaction.reply({ content: 'Cannot find role', ephemeral: true })
+      void interaction.reply({ content: 'Cannot find role', ephemeral: true })
       return
     }
     if ((interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageRoles, true)) !== true) {
-      await interaction.reply({ content: 'I am sorry dave, I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
+      void interaction.reply({ content: 'I am sorry dave, I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
       return
     }
     // Set Role

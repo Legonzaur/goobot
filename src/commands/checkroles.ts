@@ -9,6 +9,11 @@ module.exports = {
     .setName('checkroles')
     .setDescription('Prints all roles permissions'),
   async execute (interaction: CommandInteraction) {
+    if (interaction.guild === null) {
+      void interaction.reply({ content: 'I am sorry dave, I cannot do that\nCommand not available outside of guilds', ephemeral: true })
+      return
+    }
+
     if ((interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageRoles, true)) !== true) {
       await interaction.reply({ content: 'I am sorry dave, I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
       return
