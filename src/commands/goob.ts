@@ -2,7 +2,7 @@ import {
   type CommandInteraction,
   SlashCommandBuilder, EmbedBuilder, type Message, ButtonStyle, ButtonBuilder, ActionRowBuilder, ComponentType, type GuildMember
 } from 'discord.js'
-import { checkMemberPermissions, deleteGoob, execute, getMemberPermissionsRaw } from '../db'
+import { checkMemberPermissions, deleteGoob, execute } from '../db'
 
 module.exports = {
   global: true,
