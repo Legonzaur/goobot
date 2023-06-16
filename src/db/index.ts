@@ -44,7 +44,7 @@ export async function checkMemberPermissions (member: GuildMember): Promise<Perm
   return {
     create: userPerms.create > 0,
     read: userPerms.read > 0,
-    delete: userPerms.read > 0
+    delete: userPerms.delete > 0
   }
 }
 
