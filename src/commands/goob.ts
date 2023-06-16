@@ -83,10 +83,6 @@ module.exports = {
         return
       }
 
-      console.log((await getMemberPermissionsRaw(i.member as GuildMember)))
-      console.log((await checkMemberPermissions(i.member as GuildMember)).delete)
-      console.log((await checkMemberPermissions(i.member as GuildMember)))
-
       await deleteGoob(targetImage, interaction.client)
       await interaction.deleteReply()
     })
