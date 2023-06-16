@@ -12,7 +12,8 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 const promises = [] as Array<Promise<void>>
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file)
-  promises.push(import(filePath).then(({ default: command }) => {
+  promises.push(import(filePath).then(({ default: command, global }) => {
+    if (global === true) return
     if ('data' in command && 'execute' in command) {
       commands.push(command.data.toJSON())
     } else {
