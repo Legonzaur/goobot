@@ -29,7 +29,6 @@ export async function getMemberPermissionsRaw (member: GuildMember): Promise<Per
   const allPermissions = await execute('SELECT * FROM permissions WHERE guild=$guild', { $guild: member.guild.id }) as Array<PermsNumbers & { role: string }>
   const userPerms = allPermissions.reduce<PermsNumbers>((acc, val) => {
     if (!member?.roles.cache.some(r => r.id === val.role.toString())) return acc
-    console.log(val.role)
     return {
       create: acc.create + val.create,
       read: acc.read + val.read,
