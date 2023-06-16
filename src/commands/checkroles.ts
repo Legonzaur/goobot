@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder, EmbedBuilder, PermissionsBitField
 } from 'discord.js'
 import { execute, type PermsNumbers } from '../db'
+import { owner_id } from '../config.json'
 
 module.exports = {
   global: false,
@@ -15,9 +16,11 @@ module.exports = {
       return
     }
 
-    if ((interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageRoles, true)) !== true) {
-      await interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
-      return
+    if (interaction.user.id !== owner_id) {
+      if ((interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageRoles, true)) !== true) {
+        await interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
+        return
+      }
     }
 
     const permissionList = await execute('SELECT * FROM permissions') as Array<{ guild: string, role: string } & PermsNumbers>
