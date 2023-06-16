@@ -10,7 +10,7 @@ import db, { checkMemberPermissions, execute, insertGoob } from '../db'
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('load')
-    .setDescription('Synchronise all past and future goobers from this channel'),
+    .setDescription('Loads all past goobers from this channel'),
   async execute (interaction: CommandInteraction) {
     if (interaction.user.id !== owner_id) {
       await interaction.reply({
@@ -30,9 +30,6 @@ module.exports = {
       return
     }
 
-    db.run('DELETE FROM goob WHERE guild = $guild', {
-      $guild: interaction.guildId
-    })
     db.run('DELETE FROM tracked WHERE guild = $guild', {
       $guild: interaction.guildId
     })
@@ -81,23 +78,6 @@ module.exports = {
 
     await interaction.editReply(
       `Loading complete ! loaded ${loaded} messages with ${loadedImages} images`
-    )
-
-    const reply = await interaction.fetchReply()
-    if (reply === undefined) {
-      await interaction.reply({
-        content: 'Impossible to fetch reply. Did something go wrong ?',
-        ephemeral: true
-      })
-      return
-    }
-    db.run(
-      'INSERT INTO tracked (guild, last_message, channel) VALUES ($guild, $last_message, $channel)',
-      {
-        $guild: interaction.guildId,
-        $channel: interaction.channelId,
-        $last_message: reply.id
-      }
     )
     const length = await execute('SELECT count(*) as count from goob')
     interaction.client.user?.setActivity(`${length[0].count as string} goobers`, {
