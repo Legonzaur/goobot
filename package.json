@@ -6,7 +6,8 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node out/index.js",
-    "sync": "node out/syncCommands.js"
+    "sync": "node out/syncCommands.js",
+    "syncGlobal": "node out/syncCommandsGlobal.js"
   },
   "author": "",
   "license": "ISC",
