@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder, EmbedBuilder, PermissionsBitField
 } from 'discord.js'
 import { execute, type PermsNumbers } from '../db'
-import { owner_id } from '../config.json'
+import { owner_id, discord_guild_id } from '../config.json'
 
 module.exports = {
   global: false,
@@ -17,6 +17,10 @@ module.exports = {
     }
 
     if (interaction.user.id !== owner_id) {
+      if (interaction.guildId !== discord_guild_id) {
+        void interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nRole settings are only available in main guild', ephemeral: true })
+        return
+      }
       if ((interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageRoles, true)) !== true) {
         await interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
         return

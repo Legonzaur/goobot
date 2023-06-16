@@ -3,10 +3,10 @@ import {
   SlashCommandBuilder, PermissionsBitField
 } from 'discord.js'
 import { execute } from '../db'
-import { discord_guild_id } from '../config.json'
+import { discord_guild_id, owner_id } from '../config.json'
 
 module.exports = {
-  global: false,
+  global: true,
   data: new SlashCommandBuilder()
     .setName('setrole')
     .setDescription('Adds permissions to a discord role')
@@ -39,10 +39,13 @@ module.exports = {
       void interaction.reply({ content: 'Cannot find role', ephemeral: true })
       return
     }
-    if (interaction.guildId !== discord_guild_id) {
-      void interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nRole settings are only available in main guild', ephemeral: true })
-      return
+    if (interaction.user.id !== owner_id) {
+      if (interaction.guildId !== discord_guild_id) {
+        void interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nRole settings are only available in main guild', ephemeral: true })
+        return
+      }
     }
+
     if ((interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageRoles, true)) !== true) {
       void interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
       return
