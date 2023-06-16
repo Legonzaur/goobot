@@ -1,8 +1,8 @@
 import {
   type CommandInteraction,
-  SlashCommandBuilder, EmbedBuilder, PermissionsBitField
+  SlashCommandBuilder, PermissionsBitField
 } from 'discord.js'
-import { execute, obj2role } from '../db'
+import { execute } from '../db'
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,15 +13,20 @@ module.exports = {
         .setName('role')
         .setDescription('The role')
         .setRequired(true))
-    .addBooleanOption(option =>
+    .addIntegerOption(option =>
       option
         .setName('delete_permission')
         .setDescription('Permission to delete goobs')
         .setRequired(true))
-    .addBooleanOption(option =>
+    .addIntegerOption(option =>
       option
         .setName('create_permission')
         .setDescription('Permission to add goobs')
+        .setRequired(true))
+    .addIntegerOption(option =>
+      option
+        .setName('read_permission')
+        .setDescription('Permission to run the goob command')
         .setRequired(true)),
   async execute (interaction: CommandInteraction) {
     /* const totalweight = (await execute('SELECT SUM(weight) as totalweight from goob'))[0].totalweight
@@ -45,26 +50,20 @@ module.exports = {
       })
 
     const permissions = {
-      create: Boolean(interaction.options.get('create_permission')?.value),
-      delete: Boolean(interaction.options.get('delete_permission')?.value)
+      create: interaction.options.get('create_permission')?.value as number,
+      delete: interaction.options.get('delete_permission')?.value as number,
+      read: interaction.options.get('read_permission')?.value as number
     }
 
-    await execute('INSERT INTO permissions (guild, role, permissions) VALUES($guild, $role, $permissions)',
+    await execute('INSERT INTO permissions (guild, role, \'create\', \'read\', \'delete\') VALUES($guild, $role, $create, $read, $delete)',
       {
         $guild: interaction.guildId,
         $role: role,
-        $permissions: obj2role(permissions)
+        $create: permissions.create,
+        $read: permissions.read,
+        $delete: permissions.delete
       })
 
-    const statusUpdate = new EmbedBuilder()
-      .setColor(0x0099FF)
-      .setTitle('Role updated successfully')
-      .addFields(
-        { name: 'Role', value: `<@&${role.toString()}>` },
-        { name: 'Can add goobs', value: permissions.create ? '🟩' : '🟥', inline: true },
-        { name: 'Can delete goobs', value: permissions.delete ? '🟩' : '🟥', inline: true }
-      )
-      .setTimestamp()
-    await interaction.reply({ embeds: [statusUpdate], ephemeral: true })
+    await interaction.client.commands.get('checkroles')?.execute(interaction)
   }
 }

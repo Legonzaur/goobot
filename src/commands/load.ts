@@ -4,9 +4,9 @@ import {
   type Message
 } from 'discord.js'
 import { owner_id } from '../config.json'
-import db from '../db'
+import db, { checkMemberPermissions } from '../db'
 
-function insertGoob (message: Message): void {
+function insertGoob (message: Message): number {
   const attachments = message.attachments.filter(
     (e) =>
       e.contentType !== null &&
@@ -30,6 +30,7 @@ function insertGoob (message: Message): void {
   }))
 
   if (attachments.size > 0 || embeds.length > 0) void message.react('📥')
+  return attachments.size + embeds.length
 }
 
 module.exports = {
@@ -62,7 +63,7 @@ module.exports = {
     })
 
     let loaded = 0
-    const loadedImages = 0
+    let loadedImages = 0
     let messages = await interaction.channel?.messages
       .fetch()
       .catch(console.error)
@@ -76,26 +77,17 @@ module.exports = {
     )
 
     while (messages !== undefined && messages.size > 0) {
-      (messages as unknown as Message[])
-        .map((e) => e).filter(e => !e.author.bot)
-        .filter(
-          (e) =>
-            e.attachments.filter(
-              (e) =>
-                e.contentType !== null &&
-                (e.contentType?.startsWith('image') ||
-                  e.contentType?.startsWith('video'))
-            ).size > 0
-        ).map(insertGoob);
+      const permissionFilter = await Promise.all((messages as unknown as Message[]).map(async e => {
+        if (e.member === null) throw new Error('member is null')
+        return (await checkMemberPermissions(e.member)).create
+      }))
 
-      (messages as unknown as Message[])
-        .map((e) => e).filter(e => !e.author.bot)
-        .filter(
-          (e) =>
-            e.embeds.filter(
-              (e) => e.image !== undefined
-            ).length > 0
-        ).map(insertGoob)
+      const filteredMessages = (messages as unknown as Message[]).map(e => e).filter((e, i) => permissionFilter[i] && !e.author.bot)
+
+      console.log(filteredMessages)
+      // parses the messages
+      // shenanigans to save goobs into the database
+      loadedImages += filteredMessages.map(insertGoob).reduce<number>((acc, v) => v + acc, 0)
 
       const lastmessage = messages.last() as Message | undefined
       if (lastmessage === undefined) {

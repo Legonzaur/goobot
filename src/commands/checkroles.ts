@@ -2,7 +2,7 @@ import {
   type CommandInteraction,
   SlashCommandBuilder, EmbedBuilder, PermissionsBitField
 } from 'discord.js'
-import { execute, role2obj } from '../db'
+import { execute, type PermsNumbers } from '../db'
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,7 +19,7 @@ module.exports = {
       return
     }
 
-    const permissionList = await execute('SELECT * FROM permissions') as Array<{ guild: string, role: string, permissions: number }>
+    const permissionList = await execute('SELECT * FROM permissions') as Array<{ guild: string, role: string } & PermsNumbers>
 
     const statusUpdate = new EmbedBuilder()
       .setColor(0x0099FF)
@@ -27,12 +27,11 @@ module.exports = {
       .setTimestamp()
 
     permissionList.forEach(e => {
-      const permissions = role2obj(e.permissions)
-
       statusUpdate.addFields(
         { name: 'Role', value: `<@&${e.role.toString()}>` },
-        { name: 'Can add goobs', value: permissions.create ? '🟩' : '🟥', inline: true },
-        { name: 'Can delete goobs', value: permissions.delete ? '🟩' : '🟥', inline: true }
+        { name: 'Can add goobs', value: `${e.create > 0 ? '🟩' : '🟥'} (${e.create})`, inline: true },
+        { name: 'Can delete goobs', value: `${e.delete > 0 ? '🟩' : '🟥'} (${e.delete})`, inline: true },
+        { name: 'Can read goobs', value: `${e.read > 0 ? '🟩' : '🟥'} (${e.read})`, inline: true }
       )
     })
     await interaction.reply({ embeds: [statusUpdate], ephemeral: true })

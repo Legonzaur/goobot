@@ -2,7 +2,7 @@ import {
   type CommandInteraction,
   SlashCommandBuilder, EmbedBuilder, type GuildMember
 } from 'discord.js'
-import { execute, role2obj } from '../db'
+import { getMemberPermissionsRaw } from '../db'
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -11,7 +11,7 @@ module.exports = {
       option
         .setName('user')
         .setDescription('The user to check the roles of')
-        .setRequired(true))
+        .setRequired(false))
     .setDescription('Check permission of an user for goobot'),
   async execute (interaction: CommandInteraction) {
     if (interaction.guild === null) {
@@ -26,21 +26,16 @@ module.exports = {
       return
     }
 
-    const allPermissions = await execute('SELECT * FROM permissions WHERE guild=$guild', { $guild: interaction.guildId }) as Array<{ guild: string, role: string, permissions: number }>
-    console.log(allPermissions)
-    const userPermsBitField = allPermissions.reduce((acc, val) =>
-      member?.roles.cache.some(r => r.id === val.role.toString()) === true ? acc | val.permissions : acc
-    , 0)
-
-    const permissions = role2obj(userPermsBitField)
+    const permissions = await getMemberPermissionsRaw(member)
     const statusUpdate = new EmbedBuilder()
       .setColor(0x0099FF)
       .setTitle('List of roles')
       .setTimestamp()
       .addFields(
         { name: 'User', value: `<@${member.id}>` },
-        { name: 'Can add goobs', value: permissions.create ? '🟩' : '🟥', inline: true },
-        { name: 'Can delete goobs', value: permissions.delete ? '🟩' : '🟥', inline: true }
+        { name: 'Can add goobs', value: `${permissions.create > 0 ? '🟩' : '🟥'} (${permissions.create})`, inline: true },
+        { name: 'Can delete goobs', value: `${permissions.delete > 0 ? '🟩' : '🟥'} (${permissions.delete})`, inline: true },
+        { name: 'Can read goobs', value: `${permissions.read > 0 ? '🟩' : '🟥'} (${permissions.read})`, inline: true }
       )
 
     await interaction.reply({ embeds: [statusUpdate], ephemeral: true })
