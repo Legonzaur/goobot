@@ -86,6 +86,7 @@ client.on('messageCreate', async (e) => {
   if (e.guild === null) return
   if (e.member === null) return
   if (!e.channel.isTextBased()) return
+  if (e.author.bot) return
   const channel = await execute(
     'SELECT * from tracked WHERE guild=$guild AND channel=$channel',
     { $channel: e.channelId, $guild: e.guildId }
