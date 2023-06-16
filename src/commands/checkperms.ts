@@ -5,6 +5,7 @@ import {
 import { getMemberPermissionsRaw } from '../db'
 
 module.exports = {
+  global: false,
   data: new SlashCommandBuilder()
     .setName('checkperms')
     .addUserOption((option) =>

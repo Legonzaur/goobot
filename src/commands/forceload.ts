@@ -7,6 +7,7 @@ import { execute, insertGoob } from '../db'
 import { owner_id } from '../config.json'
 
 module.exports = {
+  global: false,
   data: new SlashCommandBuilder()
     .setName('forceload')
     .setDescription('Add a message in and its attachements to the database')

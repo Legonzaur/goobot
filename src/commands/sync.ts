@@ -7,6 +7,7 @@ import { owner_id } from '../config.json'
 import db, { execute } from '../db'
 
 module.exports = {
+  global: false,
   data: new SlashCommandBuilder()
     .setName('sync')
     .setDescription('Synchronise all past and future goobers from this channel'),

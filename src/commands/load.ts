@@ -8,6 +8,7 @@ import { owner_id } from '../config.json'
 import db, { checkMemberPermissions, execute, insertGoob } from '../db'
 
 module.exports = {
+  global: false,
   data: new SlashCommandBuilder()
     .setName('load')
     .setDescription('Loads all past goobers from this channel'),

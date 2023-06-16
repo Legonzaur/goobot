@@ -5,6 +5,7 @@ import {
 import { checkMemberPermissions, deleteGoob, execute } from '../db'
 
 module.exports = {
+  global: true,
   data: new SlashCommandBuilder()
     .setName('goob')
     .setDescription('meow').addIntegerOption(option =>

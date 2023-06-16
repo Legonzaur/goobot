@@ -34,7 +34,7 @@ export async function getMemberPermissionsRaw (member: GuildMember): Promise<Per
       read: acc.read + val.read,
       delete: acc.delete + val.delete
     }
-  }, { create: 0, read: 0, delete: 0 })
+  }, { create: 0, read: 1, delete: 0 })
   return userPerms
 }
 

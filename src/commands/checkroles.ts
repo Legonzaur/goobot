@@ -5,6 +5,7 @@ import {
 import { execute, type PermsNumbers } from '../db'
 
 module.exports = {
+  global: false,
   data: new SlashCommandBuilder()
     .setName('checkroles')
     .setDescription('Prints all roles in the database'),

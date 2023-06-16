@@ -6,6 +6,7 @@ import {
 import { execute } from '../db'
 
 module.exports = {
+  global: false,
   data: new SlashCommandBuilder()
     .setName('delrole')
     .setDescription('Delete a role from the database')
