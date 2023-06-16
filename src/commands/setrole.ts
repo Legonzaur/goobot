@@ -6,7 +6,7 @@ import { execute } from '../db'
 import { discord_guild_id, owner_id } from '../config.json'
 
 module.exports = {
-  global: true,
+  global: false,
   data: new SlashCommandBuilder()
     .setName('setrole')
     .setDescription('Adds permissions to a discord role')
