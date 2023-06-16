@@ -38,7 +38,7 @@ module.exports = {
       return
     }
     if ((interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageRoles, true)) !== true) {
-      void interaction.reply({ content: 'I am sorry dave, I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
+      void interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nYou don\'t have the permission to manage roles on this server', ephemeral: true })
       return
     }
     // Set Role

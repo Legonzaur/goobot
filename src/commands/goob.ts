@@ -1,8 +1,8 @@
 import {
   type CommandInteraction,
-  SlashCommandBuilder, EmbedBuilder, type Message, ButtonStyle, ButtonBuilder, ActionRowBuilder, ComponentType
+  SlashCommandBuilder, EmbedBuilder, type Message, ButtonStyle, ButtonBuilder, ActionRowBuilder, ComponentType, type GuildMember
 } from 'discord.js'
-import { execute } from '../db'
+import { checkMemberPermissions, deleteGoob, execute } from '../db'
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,13 +10,22 @@ module.exports = {
     .setDescription('meow').addIntegerOption(option =>
       option
         .setName('gooberid')
-        .setDescription('The goob to see')
+        .setDescription('The ID of the goob to see')
         .setRequired(false)),
   async execute (interaction: CommandInteraction) {
     // Pick the right goober
+    const member = interaction.member
+    if (member === null) {
+      void interaction.reply({ content: 'Something went wrong : cannot find member', ephemeral: true })
+      return
+    }
+    if (!(await checkMemberPermissions(member as GuildMember)).read) {
+      void interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nYou do not have access to that command', ephemeral: true })
+      return
+    }
     const amountOfGoobs = (await execute('SELECT COUNT(*) as totalweight from goob'))[0].totalweight
     let number = Number(interaction.options.get('gooberid')?.value)
-    let targetImage
+    let targetImage: { guild: string, channel: string, messageid: string, url: string, id: number }
     if (!Number.isNaN(number)) {
       targetImage = (await execute('SELECT * from goob WHERE id = $messageid', { $messageid: number }))[0]
     } else {
@@ -40,7 +49,7 @@ module.exports = {
 
     let exampleEmbed = new EmbedBuilder()
       .setColor(0x0099FF)
-      .setTitle(`Goob #${targetImage.id as number}`)
+      .setTitle(`Goob #${targetImage.id}`)
       .setURL(message?.url ?? targetImage.url)
       .setTimestamp(message?.createdTimestamp ?? undefined)
       .setAuthor({ name: message?.author.username ?? 'deleted message', iconURL: message?.author.avatarURL() ?? undefined, url: message?.url })
@@ -65,9 +74,15 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
 
     collector.on('collect', async i => {
-      const roles = (await execute('SELECT * from permissions WHERE guild = $guild', { $guild: i.guild?.id }))
-      console.log(roles)
-      console.log(i.member?.roles)
+      if (i.member === null) {
+        void i.reply({ content: 'Something went wrong : cannot find member', ephemeral: true })
+        return
+      }
+      if (!(await checkMemberPermissions(i.member as GuildMember)).delete) {
+        return
+      }
+      void deleteGoob(targetImage, interaction.client)
+      void interaction.deleteReply()
     })
   }
 }

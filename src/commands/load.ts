@@ -4,45 +4,19 @@ import {
   type Message
 } from 'discord.js'
 import { owner_id } from '../config.json'
-import db, { checkMemberPermissions } from '../db'
-
-function insertGoob (message: Message): number {
-  const attachments = message.attachments.filter(
-    (e) =>
-      e.contentType !== null &&
-      (e.contentType?.startsWith('image') || e.contentType?.startsWith('video'))
-  )
-
-  const embeds = message.embeds.filter((e) => e.image !== undefined || e.video !== undefined)
-
-  attachments.forEach(a => db.run('INSERT INTO goob (messageid, guild, channel, url) VALUES ($messageid, $guild, $channel, $url)', {
-    $messageid: message.id,
-    $guild: message.guildId,
-    $channel: message.channelId,
-    $url: a.url
-  }))
-
-  embeds.forEach(e => db.run('INSERT INTO goob (messageid, guild, channel, url) VALUES ($messageid, $guild, $channel, $url)', {
-    $messageid: message.id,
-    $guild: message.guildId,
-    $channel: message.channelId,
-    $url: e.video !== undefined ? e.video?.url : e.image?.url
-  }))
-
-  if (attachments.size > 0 || embeds.length > 0) void message.react('📥')
-  return attachments.size + embeds.length
-}
+import db, { checkMemberPermissions, insertGoob } from '../db'
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('load')
-    .setDescription('Sync data for '),
+    .setDescription('Synchronise all past and future goobers from this channel'),
   async execute (interaction: CommandInteraction) {
     if (interaction.user.id !== owner_id) {
       await interaction.reply({
         content: 'You do not have access to this command!',
         ephemeral: true
       })
+      return
     }
     if (
       interaction.channel?.isDMBased() === true ||
@@ -79,7 +53,7 @@ module.exports = {
     while (messages !== undefined && messages.size > 0) {
       const permissionFilter = await Promise.all((messages as unknown as Message[]).map(async e => {
         if (e.member === null) throw new Error('member is null')
-        return (await checkMemberPermissions(e.member)).create
+        return (await checkMemberPermissions(e.member)).create && e.reactions.resolve('🚫') === null
       }))
 
       const filteredMessages = (messages as unknown as Message[]).map(e => e).filter((e, i) => permissionFilter[i] && !e.author.bot)

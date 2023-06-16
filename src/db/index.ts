@@ -1,4 +1,4 @@
-import { Guild, type GuildMember } from 'discord.js'
+import { type Message, type Client, type GuildMember } from 'discord.js'
 import { verbose } from 'sqlite3'
 const sqlite = verbose()
 const db = new sqlite.Database('goobers.db')
@@ -45,5 +45,46 @@ export async function checkMemberPermissions (member: GuildMember): Promise<Perm
     read: userPerms.read > 0,
     delete: userPerms.read > 0
   }
+}
+
+export function insertGoob (message: Message): number {
+  const attachments = message.attachments.filter(
+    (e) =>
+      e.contentType !== null &&
+      (e.contentType?.startsWith('image') || e.contentType?.startsWith('video'))
+  )
+
+  const embeds = message.embeds.filter((e) => e.image !== undefined || e.video !== undefined)
+
+  attachments.forEach(a => db.run('INSERT INTO goob (messageid, guild, channel, url) VALUES ($messageid, $guild, $channel, $url)', {
+    $messageid: message.id,
+    $guild: message.guildId,
+    $channel: message.channelId,
+    $url: a.url
+  }))
+
+  embeds.forEach(e => db.run('INSERT INTO goob (messageid, guild, channel, url) VALUES ($messageid, $guild, $channel, $url)', {
+    $messageid: message.id,
+    $guild: message.guildId,
+    $channel: message.channelId,
+    $url: e.video !== undefined ? e.video?.url : e.image?.url
+  }))
+
+  if (attachments.size > 0 || embeds.length > 0) void message.react('📥')
+  return attachments.size + embeds.length
+}
+
+export async function deleteGoob (targetimage: { guild: string, channel: string, messageid: string, url: string, id: number }, client: Client): Promise<void> {
+  await execute('DELETE FROM goob WHERE id=$id', { $id: targetimage.id })
+  const messageGuild = await client.guilds.fetch(targetimage.guild)
+  const messageChannel = await messageGuild.channels.fetch(targetimage.channel)
+  let message = undefined as Message | undefined
+
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+  if (messageChannel?.isTextBased()) {
+    message = await messageChannel.messages.fetch(targetimage.messageid).catch(() => undefined)
+  }
+  if (message === undefined) return
+  await message.react('🚫')
 }
 export default db
