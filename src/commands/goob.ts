@@ -2,7 +2,7 @@ import {
   type CommandInteraction,
   SlashCommandBuilder, EmbedBuilder, type Message, ButtonStyle, ButtonBuilder, ActionRowBuilder, ComponentType, type GuildMember
 } from 'discord.js'
-import { checkMemberPermissions, deleteGoob, execute } from '../db'
+import { checkMemberPermissions, deleteGoob, execute, getMemberPermissionsRaw } from '../db'
 
 module.exports = {
   global: true,
@@ -83,7 +83,7 @@ module.exports = {
         return
       }
 
-      console.log(i)
+      console.log((await getMemberPermissionsRaw(i.member)))
       console.log((await checkMemberPermissions(i.member as GuildMember)).delete)
       console.log((await checkMemberPermissions(i.member as GuildMember)))
 
