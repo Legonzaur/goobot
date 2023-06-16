@@ -30,6 +30,7 @@ module.exports = {
       return
     }
 
+    await interaction.reply({ content: 'This channel has been set as the goober channel' })
     // await interaction.client.commands.get('load')?.execute(interaction)
 
     const reply = await interaction.fetchReply()
@@ -53,7 +54,5 @@ module.exports = {
     interaction.client.user?.setActivity(`${length[0].count as string} goobers`, {
       type: ActivityType.Listening
     })
-
-    await interaction.reply({ content: 'this channel has been set as the goober channel', ephemeral: true })
   }
 }
