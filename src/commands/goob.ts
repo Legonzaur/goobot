@@ -83,7 +83,7 @@ module.exports = {
         return
       }
 
-      console.log((await getMemberPermissionsRaw(i.member)))
+      console.log((await getMemberPermissionsRaw(i.member as GuildMember)))
       console.log((await checkMemberPermissions(i.member as GuildMember)).delete)
       console.log((await checkMemberPermissions(i.member as GuildMember)))
 
