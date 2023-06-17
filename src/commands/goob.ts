@@ -67,7 +67,7 @@ module.exports = {
 
     const row = new ActionRowBuilder()
       .addComponents(gulag) as any
-    const response = await interaction.reply({ embeds: [exampleEmbed], files, components: [row] })
+    const response = await interaction.editReply({ embeds: [exampleEmbed], files, components: [row] })
 
     const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
 
