@@ -71,6 +71,8 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
 
     collector.on('collect', async i => {
+      console.log(i.member)
+      console.log((await checkMemberPermissions(i.member as GuildMember ?? undefined)))
       if (!(await checkMemberPermissions(i.member as GuildMember ?? undefined)).delete) {
         return
       }
