@@ -20,6 +20,7 @@ module.exports = {
       void interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nYou do not have access to that command', ephemeral: true })
       return
     }
+    await interaction.deferReply()
     const amountOfGoobs = (await execute('SELECT COUNT(*) as totalweight from goob'))[0].totalweight
     let number = Number(interaction.options.get('gooberid')?.value)
     let targetImage: { guild: string, channel: string, messageid: string, url: string, id: number }
