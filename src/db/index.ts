@@ -25,7 +25,8 @@ db.serialize(() => {
 export interface PermsNumbers { create: number, read: number, delete: number }
 export interface Perms { create: boolean, delete: boolean, read: boolean }
 
-export async function getMemberPermissionsRaw (member: GuildMember): Promise<PermsNumbers> {
+export async function getMemberPermissionsRaw (member?: GuildMember): Promise<PermsNumbers> {
+  if (member === undefined) return { create: 1, read: 1, delete: 0 }
   const allPermissions = await execute('SELECT * FROM permissions WHERE guild=$guild', { $guild: member.guild.id }) as Array<PermsNumbers & { role: string }>
   const userPerms = allPermissions.reduce<PermsNumbers>((acc, val) => {
     if (!member?.roles.cache.some(r => r.id === val.role.toString())) return acc
@@ -38,7 +39,7 @@ export async function getMemberPermissionsRaw (member: GuildMember): Promise<Per
   return userPerms
 }
 
-export async function checkMemberPermissions (member: GuildMember): Promise<Perms> {
+export async function checkMemberPermissions (member?: GuildMember): Promise<Perms> {
   const userPerms = await getMemberPermissionsRaw(member)
   return {
     create: userPerms.create > 0,
@@ -111,10 +112,9 @@ export async function loadPreviousGoob (client: Client): Promise<void> {
     while (messages !== undefined && messages.size > 0) {
       loaded += messages.size
       const permissionFilter = await Promise.all((messages as unknown as Message[]).map(async e => {
-        let member = e.member
+        let member = e.member ?? undefined
         if (member === null) {
-          const member2 = await (e.guild?.members.fetch(e.author.id))?.catch(e => {})
-          if (member2 === undefined) return
+          const member2 = await (e.guild?.members.fetch(e.author.id))?.catch(e => undefined)
           member = member2
         }
         return (await checkMemberPermissions(member)).create && e.reactions.resolve('🚫') === null

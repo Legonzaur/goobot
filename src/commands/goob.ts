@@ -15,11 +15,7 @@ module.exports = {
         .setRequired(false)),
   async execute (interaction: CommandInteraction) {
     // Pick the right goober
-    const member = interaction.member
-    if (member === null) {
-      void interaction.reply({ content: 'Something went wrong : cannot find member', ephemeral: true })
-      return
-    }
+    const member = interaction.member ?? undefined
     if (!(await checkMemberPermissions(member as GuildMember)).read) {
       void interaction.reply({ content: 'I am sorry dave, I\'m afraid I cannot do that\nYou do not have access to that command', ephemeral: true })
       return
@@ -75,11 +71,7 @@ module.exports = {
     const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
 
     collector.on('collect', async i => {
-      if (i.member === null) {
-        void i.reply({ content: 'Something went wrong : cannot find member', ephemeral: true })
-        return
-      }
-      if (!(await checkMemberPermissions(i.member as GuildMember)).delete) {
+      if (!(await checkMemberPermissions(i.member as GuildMember ?? undefined)).delete) {
         return
       }
 
