@@ -69,7 +69,7 @@ module.exports = {
       .addComponents(gulag) as any
     const response = await interaction.editReply({ embeds: [exampleEmbed], files, components: [row] })
 
-    const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
+    const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 })
 
     collector.on('collect', async i => {
       console.log(i.member)
